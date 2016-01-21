@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 project(huffman)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_C_FLAGS "-std=c99")
 
-set(SOURCE_FILES huffman.cpp)
-add_executable(huffman ${SOURCE_FILES})
+set(SOURCE_FILES huffman.c tree_3cell.c tree_3cell.h bitset.c bitset.h)
+add_executable(huffman ${SOURCE_FILES} huffman.c)
