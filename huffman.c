@@ -13,6 +13,8 @@ int main() {
     // loop trough text and cast each symbol to int
     // increase the index == int by one
 
+    // make structs
+
     // find lowest two values in freq array and list of trees
 
     // build new tree in list of tree either from two values of freq list
