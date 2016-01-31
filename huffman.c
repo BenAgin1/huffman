@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+/*
+ * Making a frequency table of the unsigned chars in
+ * infilep. The besides the filehandle, the function
+ * also takes a pointer to an int array of size 256.
+ */
 void freqAnalysis(FILE * infilep, int * freqTable)
 {
     int readChar;
@@ -17,8 +23,19 @@ void freqAnalysis(FILE * infilep, int * freqTable)
 }
 
 
-
+/*
+ * Huffman coding
+ *
+ * This program can create Huffman code tables and
+ * use them to compress/decompress input files.
+ *
+ *
+ */
 int main(int argc, char ** argv) {
+
+    /*
+     * File- and input arg handling
+     */
 
     FILE * infilep; /* Pointer to input file */
     int freqTable[256] = { 0 };
@@ -44,6 +61,13 @@ int main(int argc, char ** argv) {
         return 0;
     }
 
+
+
+
+    /*
+     * making frequency table
+     */
+
     freqAnalysis(infilep, freqTable);
 
     // visualizing freq analysis
@@ -52,14 +76,18 @@ int main(int argc, char ** argv) {
         printf("%c = %i = %i\n", iii, iii, freqTable[iii]);
     }*/
 
-    // make structs
 
-    // find lowest two values in freq array and list of trees
+    /*
+     * creating Huffman table
+     */
 
-    // build new tree in list of tree either from two values of freq list
-    // or 1 value freq list and one value tree list or two value tree list
-    // all values from the tree list require rebuilding the tree and then removing
-    // the old tree, until just one tree in tree list
+    // use priority queue to make tree
+
+
+    // read out huffman codes into array
+
+
+
 
 
     return 0;
