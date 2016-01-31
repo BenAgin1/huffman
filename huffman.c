@@ -52,6 +52,8 @@ int main(int argc, char ** argv) {
         printf("%c = %i = %i\n", iii, iii, freqTable[iii]);
     }*/
 
+    // make structs
+
     // find lowest two values in freq array and list of trees
 
     // build new tree in list of tree either from two values of freq list
