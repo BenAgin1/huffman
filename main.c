@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-//test
+
+//calculate number of digits in an int.
 #define len(x) ((int)log10(x)+1)
 
 /* Node of the huffman tree */
@@ -22,9 +23,16 @@ int findSmaller (Node *array[], int differentFrom){
   int smaller;
   int i = 0;
 
+  // loop over the array as long as -1 is found as value for the freq
   while (array[i]->value==-1)
     i++;
+
+  // now we found a valid unused freq value, set it's index to smaller
   smaller=i;
+
+  // if the index equals to differentFrom (-1, or an already found smallest)
+  // jump one ahead until a valid freq value is found (not -1) and set the index
+  // to smaller
   if (i==differentFrom){
     i++;
     while (array[i]->value==-1)
@@ -32,6 +40,9 @@ int findSmaller (Node *array[], int differentFrom){
     smaller=i;
   }
 
+  // now iterate over the whole array looking at the values.
+  // if you find one lower than the current one from index smaller,
+  // set the new to index smaller
   for (i=1;i<27;i++){
     if (array[i]->value==-1)
       continue;
