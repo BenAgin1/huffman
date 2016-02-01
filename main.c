@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+//test
 #define len(x) ((int)log10(x)+1)
 
 /* Node of the huffman tree */
