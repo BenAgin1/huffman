@@ -68,7 +68,7 @@ int main(int argc, char **argv){
 	lekis2 = binaryTree_inspectLabel(lekis, binaryTree_root(lekis));
 	printf("%d\n", lekis2->value);*/
 	/////////////////////////////////////////////////
-	//OLD CODE OUTSIDE OF FUNCTION
+	//OLD CODE OUTSIDE OF fFUNCTION
 	binary_tree *tree3;
 	int i=0;
 	while(!pqueue_isEmpty(treebuildingQueue)){
