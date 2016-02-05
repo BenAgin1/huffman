@@ -16,6 +16,7 @@ typedef struct node Node;
 void getFrequency(int *frequency, FILE* file);
 int compareTrees(VALUE tree1, VALUE tree2);
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
+void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree);
 
 int main(int argc, char **argv){
 	int frequency[256];
@@ -68,7 +69,7 @@ int main(int argc, char **argv){
 	lekis2 = binaryTree_inspectLabel(lekis, binaryTree_root(lekis));
 	printf("%d\n", lekis2->value);*/
 	/////////////////////////////////////////////////
-	//OLD CODE OUTSIDE OF fFUNCTION
+	//OLD CODE OUTSIDE OF FUNCTION
 	binary_tree *tree3;
 	int i=0;
 	while(!pqueue_isEmpty(treebuildingQueue)){
@@ -105,10 +106,11 @@ int main(int argc, char **argv){
 	}
 	//////////////////////////////////////////////////////////////////////
 	//SOME TESTS FOR THE COMPLETE TREE
+	traverseTree(binaryTree_root(tree4), tree4);
 	binaryTree_pos hejsan = binaryTree_root(tree4);
 	int j=0;
-	while(binaryTree_hasRightChild(tree4, hejsan)){
-			hejsan = binaryTree_rightChild(tree4, hejsan);
+	while(binaryTree_hasLeftChild(tree4, hejsan)){
+			hejsan = binaryTree_leftChild(tree4, hejsan);
 			j++;
 	}
 	freqChar *lekstuga = binaryTree_inspectLabel(tree4, binaryTree_rightChild(tree4, binaryTree_leftChild(tree4, binaryTree_root(tree4))));
@@ -226,4 +228,21 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
 	}
 	pqueue_free(treebuildingQueue);
 	return 0;
+}
+
+void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree){
+	
+	if(binaryTree_hasLeftChild(huffmanTree, pos)){
+		traverseTree(binaryTree_leftChild(huffmanTree, pos), huffmanTree);
+	}
+	if(binaryTree_hasRightChild(huffmanTree, pos)){
+		traverseTree(binaryTree_rightChild(huffmanTree, pos), huffmanTree);
+	}
+	
+	/*If current position does not have a left or right child print the character*/
+	if(!binaryTree_hasLeftChild(huffmanTree, pos)&&!binaryTree_hasRightChild(huffmanTree, pos)){
+		freqChar* tmp = binaryTree_inspectLabel(huffmanTree, pos);
+		printf("%c : %d\n", tmp->character, tmp->value);
+	}
+	
 }
