@@ -16,7 +16,7 @@ typedef struct node Node;
 void getFrequency(int *frequency, FILE* file);
 int compareTrees(VALUE tree1, VALUE tree2);
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
-void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree);
+void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree, bitset * navPath);
 
 int main(int argc, char **argv){
 
@@ -76,7 +76,11 @@ int main(int argc, char **argv){
 
 	//////////////////////////////////////////////////////////////////////
 	//SOME TESTS FOR THE COMPLETE TREE
-	traverseTree(binaryTree_root(tree4), tree4);
+
+
+	bitset *navPath = bitset_empty();
+
+	traverseTree(binaryTree_root(tree4), tree4, navPath );
 
 	fclose(infilep);
 	fclose(outfilep);
@@ -234,19 +238,39 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
  * of type freqChar. It will print out both charachter and value
  * of each leaf. Traversal is pre-order.
  */
-void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree){
-	
+void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath){
+
+	int length = navPath->length;
+
 	if(binaryTree_hasLeftChild(huffmanTree, pos)){
-		traverseTree(binaryTree_leftChild(huffmanTree, pos), huffmanTree);
+		bitset *newPath = bitset_empty();
+		for (int iii = 0; iii < length; iii++ ){
+			bitset_setBitValue(newPath, iii, bitset_memberOf(navPath,iii));
+		}
+		bitset_setBitValue(newPath, length, 0);
+		traverseTree(binaryTree_leftChild(huffmanTree, pos), huffmanTree, newPath);
+		bitset_free(newPath);
 	}
 	if(binaryTree_hasRightChild(huffmanTree, pos)){
-		traverseTree(binaryTree_rightChild(huffmanTree, pos), huffmanTree);
+		bitset *newPath = bitset_empty();
+		for (int iii = 0; iii < length; iii++ ){
+			bitset_setBitValue(newPath, iii, bitset_memberOf(navPath,iii));
+		}
+		bitset_setBitValue(newPath, length, 1);
+		traverseTree(binaryTree_rightChild(huffmanTree, pos), huffmanTree, newPath);
+		bitset_free(newPath);
 	}
 	
 	/*If current position does not have a left or right child print the character*/
 	if(!binaryTree_hasLeftChild(huffmanTree, pos)&&!binaryTree_hasRightChild(huffmanTree, pos)){
 		freqChar* tmp = binaryTree_inspectLabel(huffmanTree, pos);
-		printf("%c : %d\n", tmp->character, tmp->value);
+		printf("%c : %d : ", tmp->character, tmp->value);
+		for (int iii = 0; iii < length; iii++){
+			printf("%d", bitset_memberOf(navPath, iii) );
+		}
+		printf("\n");
+
 	}
+
 	
 }

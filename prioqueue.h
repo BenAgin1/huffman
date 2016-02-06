@@ -28,8 +28,10 @@ typedef void *VALUE;
 /* Type for function comparing two data (see create for details)*/
 typedef int CompareFunction(VALUE,VALUE);
 
-/*Types for memory deallocation functions */
-typedef void memFreeFunc(VALUE);
+#ifndef __MEMFREEDATAFUNC
+#define __MEMFREEDATAFUNC
+typedef void memFreeFunc(data);
+#endif
 
 typedef struct MyPQ {
     list *pq;
