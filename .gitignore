@@ -34,8 +34,6 @@
 # IDE
 .idea/*
 
-# CMake
-CMakeLists.txt
 
 # misc
 main3.c
