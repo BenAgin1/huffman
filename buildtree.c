@@ -19,13 +19,24 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
 void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree);
 
 int main(int argc, char **argv){
+
+
+	/*
+	 * Settings Variables
+	 */
+
 	int frequency[256];
 	int character;
 	if(argc <= 2){
 		fprintf(stderr, "Usage: input file, output file\n");
 		return 0;
 	}
-	
+
+
+    /*
+     * validating input args
+     */
+
 	FILE* infilep = fopen(argv[1], "rt");
 	if(infilep == NULL){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[1]);
@@ -35,100 +46,53 @@ int main(int argc, char **argv){
 	if(outfilep == NULL){
 		fprintf(stderr, "Couldn't open output file %s\n", argv[2]);
 	}
-	
-	getFrequency(frequency, infilep);
-	printf("HEJEJEJEJ\n");
+
+
+
+    /*
+     * calculate frequency table
+     * and build huffman tree
+     */
+
+
+    getFrequency(frequency, infilep);
 	binary_tree *tree4 = buildHuffmanTree(frequency, compareTrees);
-	/*for (character = 0; character < 256; character++){
-		printf("%c %d : %d\n", (char)character, character, frequency[character]);
-	}*/
+
+    // Create Priority Queue
 	pqueue *treebuildingQueue = pqueue_empty(compareTrees);
 	pqueue_setMemHandler(treebuildingQueue, free);
+
+    // Fill Priority Queue with Root/Leafs that have a label (freqChar)
 	for (character = 0; character < 256; character++){
 		freqChar *tmp=malloc(sizeof(freqChar));
-		tmp->character = character;
+
+        tmp->character = character;
 		tmp->value = frequency[character];
-		binary_tree* test = binaryTree_create();
-		binaryTree_setLabel(test, tmp, binaryTree_root(test));
+
+        binary_tree* test = binaryTree_create();   // Does each binary tree also needs a MemHandler?
+        binaryTree_setLabel(test, tmp, binaryTree_root(test));
 		pqueue_insert(treebuildingQueue, test);
 	}
-	////////////////////////////////////////////////
-	//QUEUE TESTING ETC
-	//TESTED QUEUE SEEMS TO WORK AS INTENDED
-	/*binary_tree *lekis = pqueue_inspect_first(treebuildingQueue);
-	freqChar *lekis2 = binaryTree_inspectLabel(lekis, binaryTree_root(lekis));
-	printf("%d\n", lekis2->value);
-	
-	pqueue_delete_first(treebuildingQueue);
-	lekis = pqueue_inspect_first(treebuildingQueue);
-	lekis2 = binaryTree_inspectLabel(lekis, binaryTree_root(lekis));
-	printf("%d\n", lekis2->value);
-	
-	pqueue_delete_first(treebuildingQueue);
-	lekis = pqueue_inspect_first(treebuildingQueue);
-	lekis2 = binaryTree_inspectLabel(lekis, binaryTree_root(lekis));
-	printf("%d\n", lekis2->value);*/
-	/////////////////////////////////////////////////
-	//OLD CODE OUTSIDE OF FUNCTION
-	binary_tree *tree3;
-	int i=0;
-	while(!pqueue_isEmpty(treebuildingQueue)){
-		binary_tree *newTree = binaryTree_create();
-		binary_tree *tree1 = pqueue_inspect_first(treebuildingQueue);
-		tree3=tree1;
-		freqChar *leka2 = binaryTree_inspectLabel(pqueue_inspect_first(treebuildingQueue), binaryTree_root(pqueue_inspect_first(treebuildingQueue)));
-		pqueue_delete_first(treebuildingQueue);
-		freqChar *leka = malloc(sizeof(freqChar));
-		if(pqueue_isEmpty(treebuildingQueue)){
-			break;
-		}
-		else{
-			binary_tree *tree2 = pqueue_inspect_first(treebuildingQueue);
-			freqChar *leka3 = binaryTree_inspectLabel(pqueue_inspect_first(treebuildingQueue), binaryTree_root(pqueue_inspect_first(treebuildingQueue)));
-			pqueue_delete_first(treebuildingQueue);
-			
-			//freqChar *leka2 = binaryTree_inspectLabel(tree1, binaryTree_root(tree1));
-			//freqChar *leka3 = binaryTree_inspectLabel(tree2, binaryTree_root(tree2));
-			//freqChar *leka4 = binaryTree_inspectLabel(pqueue_inspect_first(treebuildingQueue), binaryTree_root(pqueue_inspect_first(treebuildingQueue)));
-			//printf("%d\n", leka2->value+i);
-			leka->value = leka2->value + leka3->value;
-			leka->character = -1;
-			//printf("%d\n", i);
-			binaryTree_setLabel(newTree, leka, binaryTree_root(newTree));
-			binaryTree_insertLeft(newTree, binaryTree_root(newTree));
-			binaryTree_insertRight(newTree, binaryTree_root(newTree));
-			newTree->root->rightChild = tree1->root;
-			newTree->root->leftChild = tree2->root;
-			
-			pqueue_insert(treebuildingQueue, newTree);
-		}
-		i++;
-	}
+
 	//////////////////////////////////////////////////////////////////////
 	//SOME TESTS FOR THE COMPLETE TREE
 	traverseTree(binaryTree_root(tree4), tree4);
-	binaryTree_pos hejsan = binaryTree_root(tree4);
-	int j=0;
-	while(binaryTree_hasLeftChild(tree4, hejsan)){
-			hejsan = binaryTree_leftChild(tree4, hejsan);
-			j++;
-	}
-	freqChar *lekstuga = binaryTree_inspectLabel(tree4, binaryTree_rightChild(tree4, binaryTree_leftChild(tree4, binaryTree_root(tree4))));
-	printf("%d\n", lekstuga->value);
-	freqChar *lekstuga2 = binaryTree_inspectLabel(tree4, hejsan);
-	freqChar *lekstuga3 = binaryTree_inspectLabel(tree4, binaryTree_root(tree4));
-	printf("%d\n", lekstuga3->value);
-	printf("%d\n", lekstuga2->value);
-	printf("%c\n", lekstuga2->character);
-	printf("Antal steg: %d\n", j);
-	
-	printf("%d\n", frequency[0]);
+
 	fclose(infilep);
 	fclose(outfilep);
 	pqueue_free(treebuildingQueue);
 	return 0;
 }
 
+/*
+ * getFrequency - calculates a frequency table on an text imput file
+ *                using the 256 characters of the extended ASCII table.
+ *
+ * Parameter:   frequency - pointer to an int array of length 256. Here the
+ *                          frequencies will be summed and stored
+ *              file      - pointer of type FILE. The input file has to be
+ *                          a standard text file.
+ */
 void getFrequency(int* frequency, FILE* file){
 	int finished=0;
 	int ch;
@@ -150,6 +114,17 @@ void getFrequency(int* frequency, FILE* file){
 	}
 }
 
+
+/*
+ * compareTrees - is the compare function used in the priorityQueue datatype
+ *
+ * Paramter:    tree1   - pointer to a binary tree datatype
+ *              tree2   - pointer to a binary tree dataype
+ *
+ * Comments:    This function assumes a freqChar struct to be stored as
+ *              the label of the binary tree. The actual comparison is done
+ *              between the 'value' of each tree's root.
+ */
 int compareTrees(VALUE tree1, VALUE tree2){
 	freqChar tmp1;
 	freqChar tmp2;
@@ -164,8 +139,27 @@ int compareTrees(VALUE tree1, VALUE tree2){
 	
 }
 
+
+/*
+ * buildHuffmanTree:    - This function builds a huffman tree from a frequency table
+ *
+ * Parameter:           frequency   - a pointer to an int array of length 256 that represents an
+ *                                    extended ASCII character frequency table generated by the
+ *                                    function getFrequency
+ *                      compare     - pointer to a function that compares the root label of the
+ *                                    two binary trees. This function will be used as argument
+ *                                    for the priority queue datatype.
+ *
+ *  The function first makes root/leafs for all 256 characters in the extended ASCII table and puts
+ *  them in a priority queue (datatype pqueue from prioqueue.c /.h). Then in a while loop, two
+ *  elements at a time are removed from the priority queue. And linked into a new binary tree root.
+ *  The label of the new tree root contains as value the combined values of the two children. This
+ *  is repeated until just one element is left in the priority queue.
+ *
+ */
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
-	pqueue *treebuildingQueue = pqueue_empty (compare);
+
+    pqueue *treebuildingQueue = pqueue_empty (compare);
 	//pqueue_setMemHandler(treebuildingQueue, free); // CANT USE THIS CAUSE THE FINISHED TREE WILL BE REMOVED
 	//PERHAPS THE PRIO QUEUE SHOULD BE BUILT IN A DIFFERENT FUNCTION?
 	int chartmp;
@@ -230,6 +224,16 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
 	return 0;
 }
 
+/*
+ * traverseTree - function that traverses a binary tree
+ *
+ * Parameter:   pos     - position where to start the traversal
+ *              tree    - pointer to binary tree to traverse
+ *
+ * This function expects the leafs of the tree to have labels
+ * of type freqChar. It will print out both charachter and value
+ * of each leaf. Traversal is pre-order.
+ */
 void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree){
 	
 	if(binaryTree_hasLeftChild(huffmanTree, pos)){

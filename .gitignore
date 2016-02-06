@@ -34,6 +34,9 @@
 # IDE
 .idea/*
 
-#CMake
+# CMake
 CMakeLists.txt
+
+# misc
 main3.c
+buildtree
