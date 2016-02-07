@@ -8,7 +8,7 @@
 /* Node of the huffman tree */
 typedef struct {
   int value;
-  char character;
+  unsigned char character;
 } freqChar;
 
 typedef struct node Node;
@@ -16,7 +16,7 @@ typedef struct node Node;
 void getFrequency(int *frequency, FILE* file);
 int compareTrees(VALUE tree1, VALUE tree2);
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
-void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree, bitset * navPath);
+void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree, bitset * navPath, bitset *pathArray[]);
 
 int main(int argc, char **argv){
 
@@ -51,40 +51,33 @@ int main(int argc, char **argv){
 
     /*
      * calculate frequency table
-     * and build huffman tree
+     * build huffman tree
+     * build code table
      */
 
 
     getFrequency(frequency, infilep);
 	binary_tree *tree4 = buildHuffmanTree(frequency, compareTrees);
 
-    // Create Priority Queue
-	pqueue *treebuildingQueue = pqueue_empty(compareTrees);
-	pqueue_setMemHandler(treebuildingQueue, free);
-
-    // Fill Priority Queue with Root/Leafs that have a label (freqChar)
-	for (character = 0; character < 256; character++){
-		freqChar *tmp=malloc(sizeof(freqChar));
-
-        tmp->character = character;
-		tmp->value = frequency[character];
-
-        binary_tree* test = binaryTree_create();   // Does each binary tree also needs a MemHandler?
-        binaryTree_setLabel(test, tmp, binaryTree_root(test));
-		pqueue_insert(treebuildingQueue, test);
-	}
-
-	//////////////////////////////////////////////////////////////////////
-	//SOME TESTS FOR THE COMPLETE TREE
-
-
 	bitset *navPath = bitset_empty();
+	bitset *pathArray[256];
 
-	traverseTree(binaryTree_root(tree4), tree4, navPath );
+	traverseTree(binaryTree_root(tree4), tree4, navPath, pathArray );
+
+    // test whether we can access the bitset stored in a bitset array
+    for (int iii = 0; iii < 256; iii++) {
+        printf("%d\n", pathArray[iii]->length);
+    }
+
+
+
+	/*
+	 * cleaning up
+	 */
 
 	fclose(infilep);
 	fclose(outfilep);
-	pqueue_free(treebuildingQueue);
+
 	return 0;
 }
 
@@ -238,7 +231,7 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
  * of type freqChar. It will print out both charachter and value
  * of each leaf. Traversal is pre-order.
  */
-void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath){
+void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath, bitset *pathArray[]){
 
 	int length = navPath->length;
 
@@ -248,8 +241,8 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 			bitset_setBitValue(newPath, iii, bitset_memberOf(navPath,iii));
 		}
 		bitset_setBitValue(newPath, length, 0);
-		traverseTree(binaryTree_leftChild(huffmanTree, pos), huffmanTree, newPath);
-		bitset_free(newPath);
+		traverseTree(binaryTree_leftChild(huffmanTree, pos), huffmanTree, newPath, pathArray);
+		//bitset_free(newPath);
 	}
 	if(binaryTree_hasRightChild(huffmanTree, pos)){
 		bitset *newPath = bitset_empty();
@@ -257,14 +250,18 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 			bitset_setBitValue(newPath, iii, bitset_memberOf(navPath,iii));
 		}
 		bitset_setBitValue(newPath, length, 1);
-		traverseTree(binaryTree_rightChild(huffmanTree, pos), huffmanTree, newPath);
-		bitset_free(newPath);
+		traverseTree(binaryTree_rightChild(huffmanTree, pos), huffmanTree, newPath, pathArray);
+		//bitset_free(newPath);
 	}
 	
 	/*If current position does not have a left or right child print the character*/
 	if(!binaryTree_hasLeftChild(huffmanTree, pos)&&!binaryTree_hasRightChild(huffmanTree, pos)){
 		freqChar* tmp = binaryTree_inspectLabel(huffmanTree, pos);
-		printf("%c : %d : ", tmp->character, tmp->value);
+		//printf("%d\n", tmp->character);
+		pathArray[(int)tmp->character] = navPath;
+
+        // diagnostic screen output, to be removed later
+        printf("%c : %d : ", tmp->character, tmp->value);
 		for (int iii = 0; iii < length; iii++){
 			printf("%d", bitset_memberOf(navPath, iii) );
 		}
