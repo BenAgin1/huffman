@@ -17,6 +17,7 @@ void getFrequency(int *frequency, FILE* file);
 int compareTrees(VALUE tree1, VALUE tree2);
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
 void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree, bitset * navPath, bitset *pathArray[]);
+void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree);
 
 int main(int argc, char **argv){
 
@@ -270,4 +271,39 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 	}
 
 	
+}
+void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
+	int finished = 0;
+	int failed = 0;
+	char tmp;
+	freqChar* tmp2;
+	binaryTree_pos treePos = binaryTree_root(huffmanTree);
+	while (finished!=1){
+		while((binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos))&&finished!=1){
+			tmp = fgetc(decodeThis);
+			if (tmp == EOF){
+				finished = 1;
+			}
+			else if (tmp == '0'){
+				treePos = binaryTree_leftChild(huffmanTree, treePos);
+			}
+			else if (tmp == '1'){
+				treePos = binaryTree_rightChild(huffmanTree, treePos);
+			}
+			else{
+				finished = 1;
+				failed = 1;
+				fprintf(stderr, "ERROR: Unknown binary sequence, decoding failed.\n");
+			}
+		}
+		if(finished != 1){
+			tmp2 = (freqChar*)binaryTree_inspectLabel(huffmanTree, treePos);
+			printf("%c\n", tmp2->character);
+			fprintf(output, "%c", tmp2->character);
+			treePos = binaryTree_root(huffmanTree);
+		}
+	}
+	if(failed == 0){
+		printf("File decoded successfully!\n");
+	}
 }
