@@ -27,7 +27,9 @@ int main(int argc, char **argv){
 	 * Variables
 	 */
 	int frequency[256];
-    
+
+
+
 
 	/*
 	 * Check number of command line args
@@ -44,7 +46,7 @@ int main(int argc, char **argv){
 	 */
 
 
-	int selector = 0;
+	int selector;
 	char encodeStr[8];
 	char decodeStr[8];
 
@@ -356,10 +358,11 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 
 
 void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
+	//int finished = 0;
 	unsigned char tmp;
 	int lengthCharBitset;
 	int lengthCharCompound;
-	bitset *compoundBitset = NULL;
+	bitset *compoundBitset;
 	bitset_empty(compoundBitset);
 
 	while((tmp = fgetc(encodeThis))){
