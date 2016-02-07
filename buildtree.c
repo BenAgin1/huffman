@@ -27,9 +27,7 @@ int main(int argc, char **argv){
 	 * Variables
 	 */
 	int frequency[256];
-
-
-
+    
 
 	/*
 	 * Check number of command line args
@@ -46,7 +44,7 @@ int main(int argc, char **argv){
 	 */
 
 
-	int selector;
+	int selector = 0;
 	char encodeStr[8];
 	char decodeStr[8];
 
@@ -100,10 +98,12 @@ int main(int argc, char **argv){
 
 			traverseTree(binaryTree_root(tree4), tree4, navPath, pathArray );
 
+			/*
 			// test whether we can access the bitset stored in a bitset array
 			for (int iii = 0; iii < 256; iii++) {
 				printf("%d\n", pathArray[iii]->length);
 			}
+			*/
 
 			encodeFile(infilep, outfilep, pathArray );
 
@@ -340,12 +340,14 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 		//printf("%d\n", tmp->character);
 		pathArray[(int)tmp->character] = navPath;
 
+		/*
         // diagnostic screen output, to be removed later
         printf("%c : %d : ", tmp->character, tmp->value);
 		for (int iii = 0; iii < length; iii++){
 			printf("%d", bitset_memberOf(navPath, iii) );
 		}
 		printf("\n");
+		*/
 
 	}
 
@@ -354,23 +356,32 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 
 
 void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
-	int finished = 0;
 	unsigned char tmp;
-	int length;
+	int lengthCharBitset;
+	int lengthCharCompound;
+	bitset *compoundBitset = NULL;
+	bitset_empty(compoundBitset);
 
-	while(finished!=1){
-		tmp = fgetc(encodeThis);
-		if (tmp == EOF){
-			finished = 1;
+	while((tmp = fgetc(encodeThis))){
+		if ( feof(encodeThis) ) {
+			break;
 		} else {
-			length = pathArray[(int)tmp]->length;
-			for(int iii = 0; iii < length; iii++) {
-				printf("%d", bitset_memberOf(pathArray[(int)tmp], iii));
+			lengthCharBitset = pathArray[(int)tmp]->length;
+			for(int iii = 0; iii < lengthCharBitset; iii++) {
+				if (compoundBitset->length==-1){
+					lengthCharCompound = 0;
+				} else {
+					lengthCharCompound = compoundBitset->length;
+				}
+
+				bitset_setBitValue(compoundBitset,lengthCharCompound, bitset_memberOf(pathArray[(int)tmp], iii));
 			}
 		}
 	}
 
+    fputs(toByteArray(compoundBitset), output);
 
+    printf("length of bitset %d\n", compoundBitset->length);
 
 }
 
