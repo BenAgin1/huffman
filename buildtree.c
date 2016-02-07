@@ -18,66 +18,153 @@ int compareTrees(VALUE tree1, VALUE tree2);
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
 void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree, bitset * navPath, bitset *pathArray[]);
 void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree);
+int wrongArgs(void);
 
 int main(int argc, char **argv){
 
+	/*
+	 * Variables
+	 */
+	int frequency[256];
+
+
+
 
 	/*
-	 * Settings Variables
+	 * Check number of command line args
 	 */
 
-	int frequency[256];
-	int character;
-	if(argc <= 2){
-		fprintf(stderr, "Usage: input file, output file\n");
+	if(argc <= 4){
+		wrongArgs();
 		return 0;
+	}
+
+
+	/*
+	 * Check and switch for encode / decode
+	 */
+
+
+	int selector;
+	char encodeStr[8];
+	char decodeStr[8];
+
+	strcpy(encodeStr, "-encode");
+	strcpy(decodeStr, "-decode");
+	if (!strcmp(argv[1], encodeStr)){
+		selector = 1;
+	} else if(!strcmp(argv[1], decodeStr)){
+		selector = 2;
+	}
+
+
+	switch(selector) {
+
+
+		case 1:
+			printf("let's encode the shit\n");
+
+			/*
+			 * Check and open all files
+			 */
+
+
+			FILE* freqFilep = fopen(argv[2], "rt");
+			if(freqFilep == NULL){
+				fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
+			}
+
+			FILE* infilep = fopen(argv[3], "rt");
+			if(infilep == NULL){
+				fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
+			}
+
+			FILE* outfilep = fopen(argv[4], "w");
+			if(outfilep == NULL){
+				fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
+			}
+
+			/*
+ 			 * calculate frequency table
+ 			 * build huffman tree
+ 			 * build code table
+ 			 */
+
+
+			getFrequency(frequency, freqFilep);
+			binary_tree *tree4 = buildHuffmanTree(frequency, compareTrees);
+
+			bitset *navPath = bitset_empty();
+			bitset *pathArray[256];
+
+			traverseTree(binaryTree_root(tree4), tree4, navPath, pathArray );
+
+			// test whether we can access the bitset stored in a bitset array
+			for (int iii = 0; iii < 256; iii++) {
+				printf("%d\n", pathArray[iii]->length);
+			}
+
+			/*
+             * cleaning up
+             */
+
+			fclose(freqFilep);
+			fclose(infilep);
+			fclose(outfilep);
+
+			break;
+
+
+
+		case 2:
+			printf("let's decode the shit\n");
+
+			/*
+			 * Check and open all files
+			 */
+
+
+			FILE* deFreqFilep = fopen(argv[2], "rt");
+			if(deFreqFilep == NULL){
+				fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
+			}
+
+			FILE* deInfilep = fopen(argv[3], "rt");
+			if(deInfilep == NULL){
+				fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
+			}
+
+			FILE* deOutfilep = fopen(argv[4], "w");
+			if(deOutfilep == NULL){
+				fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
+			}
+
+
+			break;
+		default:
+			printf("crap input\n");
+			wrongArgs();
+
 	}
 
 
     /*
      * validating input args
-     */
+     *//*
 
-	FILE* infilep = fopen(argv[1], "rt");
+	FILE* infilep = fopen(argv[2], "rt");
 	if(infilep == NULL){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[1]);
 	}
 	
-	FILE* outfilep = fopen(argv[2], "w");
+	FILE* outfilep = fopen(argv[4], "w");
 	if(outfilep == NULL){
 		fprintf(stderr, "Couldn't open output file %s\n", argv[2]);
-	}
+	}*/
 
 
 
-    /*
-     * calculate frequency table
-     * build huffman tree
-     * build code table
-     */
 
-
-    getFrequency(frequency, infilep);
-	binary_tree *tree4 = buildHuffmanTree(frequency, compareTrees);
-
-	bitset *navPath = bitset_empty();
-	bitset *pathArray[256];
-
-	traverseTree(binaryTree_root(tree4), tree4, navPath, pathArray );
-
-    // test whether we can access the bitset stored in a bitset array
-    for (int iii = 0; iii < 256; iii++) {
-        printf("%d\n", pathArray[iii]->length);
-    }
-
-
-
-	/*
-	 * cleaning up
-	 */
-
-	fclose(infilep);
-	fclose(outfilep);
 
 	return 0;
 }
@@ -110,6 +197,16 @@ void getFrequency(int* frequency, FILE* file){
 			frequency[ch]++;
 		}
 	}
+
+	// modify freq dist
+	for(int iii = 0; iii < 256; iii++){
+		frequency[iii] *= 1000;
+		if(frequency[iii]==0){
+			frequency[iii]=1;
+		}
+	}
+
+
 }
 
 
@@ -272,6 +369,13 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 
 	
 }
+
+
+void encode(FILE *encodeThis, FILE *output, bitset *pathArray[]){
+
+}
+
+
 void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
 	int finished = 0;
 	int failed = 0;
@@ -306,4 +410,13 @@ void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
 	if(failed == 0){
 		printf("File decoded successfully!\n");
 	}
+}
+
+int wrongArgs(void){
+	fprintf(stderr, "USAGE:\nhuffman [OPTION] [FILE0] [FILE1] [FILE2]\n");
+	fprintf(stderr, "Options:\n-encode encodes FILE1 acording to the frequence analysis done on FILE0. ");
+	fprintf(stderr, "Stores the result in FILE2\n");
+	fprintf(stderr, "-decode decodes FILE1 acording to the frequence analysis done on FILE0. ");
+	fprintf(stderr, "Stores the result in FILE2\n");
+	return 0;
 }
