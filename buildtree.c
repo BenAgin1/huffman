@@ -18,6 +18,7 @@ int compareTrees(VALUE tree1, VALUE tree2);
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE));
 void traverseTree(binaryTree_pos pos, binary_tree* huffmanTree, bitset * navPath, bitset *pathArray[]);
 void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree);
+void encodeFile(FILE* encodeThis, FILE* output, bitset *pathArray[]);
 int wrongArgs(void);
 
 int main(int argc, char **argv){
@@ -49,6 +50,26 @@ int main(int argc, char **argv){
 	char encodeStr[8];
 	char decodeStr[8];
 
+
+	/*
+	 * Check and open files
+	 */
+	FILE* freqFilep = fopen(argv[2], "rt");
+	if(freqFilep == NULL){
+		fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
+	}
+
+	FILE* infilep = fopen(argv[3], "rt");
+	if(infilep == NULL){
+		fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
+	}
+
+	FILE* outfilep = fopen(argv[4], "w");
+	if(outfilep == NULL){
+		fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
+	}
+
+
 	strcpy(encodeStr, "-encode");
 	strcpy(decodeStr, "-decode");
 	if (!strcmp(argv[1], encodeStr)){
@@ -63,26 +84,6 @@ int main(int argc, char **argv){
 
 		case 1:
 			printf("let's encode the shit\n");
-
-			/*
-			 * Check and open all files
-			 */
-
-
-			FILE* freqFilep = fopen(argv[2], "rt");
-			if(freqFilep == NULL){
-				fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
-			}
-
-			FILE* infilep = fopen(argv[3], "rt");
-			if(infilep == NULL){
-				fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
-			}
-
-			FILE* outfilep = fopen(argv[4], "w");
-			if(outfilep == NULL){
-				fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
-			}
 
 			/*
  			 * calculate frequency table
@@ -104,6 +105,8 @@ int main(int argc, char **argv){
 				printf("%d\n", pathArray[iii]->length);
 			}
 
+			encodeFile(infilep, outfilep, pathArray );
+
 			/*
              * cleaning up
              */
@@ -117,27 +120,6 @@ int main(int argc, char **argv){
 
 
 		case 2:
-			printf("let's decode the shit\n");
-
-			/*
-			 * Check and open all files
-			 */
-
-
-			FILE* deFreqFilep = fopen(argv[2], "rt");
-			if(deFreqFilep == NULL){
-				fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
-			}
-
-			FILE* deInfilep = fopen(argv[3], "rt");
-			if(deInfilep == NULL){
-				fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
-			}
-
-			FILE* deOutfilep = fopen(argv[4], "w");
-			if(deOutfilep == NULL){
-				fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
-			}
 
 
 			break;
@@ -371,7 +353,24 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 }
 
 
-void encode(FILE *encodeThis, FILE *output, bitset *pathArray[]){
+void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
+	int finished = 0;
+	unsigned char tmp;
+	int length;
+
+	while(finished!=1){
+		tmp = fgetc(encodeThis);
+		if (tmp == EOF){
+			finished = 1;
+		} else {
+			length = pathArray[(int)tmp]->length;
+			for(int iii = 0; iii < length; iii++) {
+				printf("%d", bitset_memberOf(pathArray[(int)tmp], iii));
+			}
+		}
+	}
+
+
 
 }
 
