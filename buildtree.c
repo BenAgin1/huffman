@@ -358,12 +358,11 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, bitset * navPath
 
 
 void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
-	//int finished = 0;
 	unsigned char tmp;
 	int lengthCharBitset;
 	int lengthCharCompound;
-	bitset *compoundBitset;
-	bitset_empty(compoundBitset);
+	bitset *compoundBitset = bitset_empty();
+
 
 	while((tmp = fgetc(encodeThis))){
 		if ( feof(encodeThis) ) {
