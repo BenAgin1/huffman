@@ -82,7 +82,14 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
 	}
 
-	FILE* outfilep = fopen(argv[4], "w");
+	FILE *outfilep;
+	if(selector == 1) {
+		outfilep = fopen(argv[4], "w");
+	} else {
+		outfilep = fopen(argv[4], "w");
+	}
+
+	//FILE* outfilep = fopen(argv[4], "wb");
 	if(outfilep == NULL){
 		fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
 	}
@@ -374,6 +381,8 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 	int lengthCharBitset;
 	int lengthCharCompound;
 	bitset *compoundBitset = bitset_empty();
+	char* writeToFile;
+	int capacityCharCompound;
 
 
 	while((tmp = fgetc(encodeThis))){
@@ -401,11 +410,25 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 		}
 	}
 
+	writeToFile = toByteArray(compoundBitset);
+	capacityCharCompound = compoundBitset->capacity;
+	lengthCharCompound = compoundBitset->length;
 
+	printf("%d, %d\n", capacityCharCompound, lengthCharCompound);
 
-    fputs(toByteArray(compoundBitset), output);
+    for(int iii = 0; iii < capacityCharCompound/8; iii++){
+    //for(int iii = 0; iii < 10; iii++){
+        //printf("%d ", (unsigned char)writeToFile[iii]);
+        fputc((unsigned char)writeToFile[iii], output);
+    }
+    for(int iii = 0; iii < 80; iii++){
+        printf("%d", bitset_memberOf(compoundBitset, iii ));
+    }
+    //printf("\n%d", sizeof(writeToFile));
 
-    printf("length of bitset %d\n", compoundBitset->length);
+	//fwrite(&writeToFile, 1, capacityCharCompound/8, output);
+
+    //printf("length of bitset %d\n", compoundBitset->length);
 
 }
 
@@ -414,42 +437,62 @@ void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
 	//int finished = 0;
 	//int failed = 0;
 	int size;
-	//freqChar* tmp2;
+	freqChar* tmp2;
 	binaryTree_pos treePos = binaryTree_root(huffmanTree);
 	fseek(decodeThis, 0, SEEK_END);
 	size = ftell(decodeThis);
 	fseek(decodeThis, 0, SEEK_SET);
 	int tmp[size];
+    bool decodeSequence[size*8];
+	printf("%d\n", size);
 
+	//size_t len = fread(tmp, sizeof(int8_t), 10, decodeThis);
 
-	for(int iii = 0; iii > size; iii++) {
+	for (int iii = 0; iii < size; iii++) {
 		tmp[iii] = fgetc(decodeThis);
+        //printf("%c", (unsigned char)tmp[iii]);
+
 	}
+    for (int iii = 0; iii < size; iii++) {
+        //tmp[iii] = fgetc(decodeThis);
+        printf("%d ", tmp[iii]);
 
-		//while((binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos))){
-			/*
-			for (int iii = 0; iii < 8; ++iii){
-				bitout[iii] = (tmp >> iii) & 1;
-			}*/
-
-			/*if (*tmp == 0){
-				treePos = binaryTree_leftChild(huffmanTree, treePos);
-			}
-			else if (*tmp == 1){
-				treePos = binaryTree_rightChild(huffmanTree, treePos);
-			}
-
-		}
-
-		tmp2 = (freqChar*)binaryTree_inspectLabel(huffmanTree, treePos);
-		printf("%c\n", tmp2->character);
-		fprintf(output, "%c", tmp2->character);
-		treePos = binaryTree_root(huffmanTree);
-		if((int)tmp2 == 4)
-			finished=1;
-		*/
+    }
 
 
+    bool *toConvert;
+    toConvert = (bool*) calloc(size*8,sizeof(bool));
+
+    for (int iii = 0; iii < size; iii++){
+        int testo = tmp[iii];
+
+        for (int jjj = 0; jjj < 8; jjj++) {
+            toConvert[iii*8+jjj] = (testo >> jjj) & 1;
+        }
+    }
+
+    treePos = binaryTree_root(huffmanTree);
+
+    for (int iii = 0; iii < size*8; iii++){
+
+        if(binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos)){
+            if(toConvert[iii] == 0){
+                treePos = binaryTree_leftChild(huffmanTree, treePos);
+            }
+            if(toConvert[iii] == 1){
+                treePos = binaryTree_rightChild(huffmanTree, treePos);
+            }
+        } else {
+            tmp2 = (freqChar *) binaryTree_inspectLabel(huffmanTree, treePos);
+            printf("%c\n", tmp2->character);
+            fprintf(output, "%c", tmp2->character);
+            treePos = binaryTree_root(huffmanTree);
+            if ((int) tmp2 == 4)
+                return;
+        }
+
+    }
+    
 	printf("File decoded successfully!\n");
 
 }
