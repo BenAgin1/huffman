@@ -141,14 +141,19 @@ int main(int argc, char **argv){
 
 			getFrequency(frequency, freqFilep);
 			binary_tree *treeDecode = buildHuffmanTree(frequency, compareTrees);
+			bitset *navPath_decode = bitset_empty();
+			bitset *pathArray_decode[256];
+
+			traverseTree(binaryTree_root(treeDecode), treeDecode, navPath_decode, pathArray_decode );
+
 			decodeFile(infilep, outfilep, treeDecode);
 
             /*
              * cleanup
              */
-            bitset_free(navPath);
+            bitset_free(navPath_decode);
             for (int i = 0; i<256; i++){
-                bitset_free(pathArray[i]);
+                bitset_free(pathArray_decode[i]);
             }
             //binaryTree_free(treeDecode);
 
@@ -157,6 +162,9 @@ int main(int argc, char **argv){
 			break;
 		default:
 			fprintf(stderr, "Unknown option selected, exiting program.\n");
+			fclose(freqFilep);
+			fclose(infilep);
+			fclose(outfilep);
 			wrongArgs();
 	}
 
@@ -387,6 +395,11 @@ void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree,
 		!binaryTree_hasRightChild(huffmanTree, pos)){
 		freqChar* tmp = binaryTree_inspectLabel(huffmanTree, pos);
 		pathArray[(int)tmp->character] = navPath;
+		printf("%c : ", tmp->character);
+		for(int iii = 0; iii < navPath->length; iii++){
+		printf("%d", bitset_memberOf(navPath, iii ));
+		}
+		printf("\n");
 	}
 }
 
@@ -437,6 +450,7 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 	writeToFile = toByteArray(compoundBitset);
 	capacityCharCompound = compoundBitset->capacity;
 	lengthCharCompound = compoundBitset->length;
+	printf("%d TEST\n", (unsigned char)writeToFile[1]);
 
 	printf("%d, %d\n", capacityCharCompound, lengthCharCompound);
 
@@ -486,28 +500,35 @@ void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
         //printf("%c", (unsigned char)tmp[iii]);
 
 	}
+	//tmp[0] = 39;
     for (int iii = 0; iii < size; iii++) {
         //tmp[iii] = fgetc(decodeThis);
-        printf("%d ", tmp[iii]);
+        //printf("%d ", tmp[iii]);
 
     }
+	printf("\n");
 
 
     bool *toConvert;
     toConvert = (bool*) calloc(size*8,sizeof(bool));
 
     for (int iii = 0; iii < size; iii++){
-        int testo = tmp[iii];
+        //int testo = tmp[iii];
 
         for (int jjj = 0; jjj < 8; jjj++) {
-            toConvert[iii*8+jjj] = (testo >> jjj) & 1;
+            toConvert[iii*8+jjj] = (tmp[iii] >> jjj) & 1;
         }
     }
-
-    treePos = binaryTree_root(huffmanTree);
-
+	/*for (int iii = 0; iii < size*8; iii++){
+		printf("%d", toConvert[iii]);
+		if((iii+1)%8==0&&iii!=0){
+			printf("\n");
+		}
+	}*/
+    //treePos = binaryTree_root(huffmanTree); //DONE ALREADY
+	printf("\n");
     for (int iii = 0; iii < size*8; iii++){
-
+		//printf("%d\n", iii);
         if(binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos)){
             if(toConvert[iii] == 0){
                 treePos = binaryTree_leftChild(huffmanTree, treePos);
@@ -517,14 +538,40 @@ void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
             }
         } else {
             tmp2 = (freqChar *) binaryTree_inspectLabel(huffmanTree, treePos);
-            printf("%c\n", tmp2->character);
+            //printf("%c\n", tmp2->character);
             fprintf(output, "%c", tmp2->character);
             treePos = binaryTree_root(huffmanTree);
-            if ((int) tmp2 == 4)
+			iii--; //THIS IS THE FIX
+            if ((int) tmp2 == 4) //WHAT DOES THIS DO?
                 return;
+			
         }
 
     }
+	//treePos = binaryTree_root(huffmanTree);
+	//int i=0;
+	/*while(i<size*8){
+		printf("%d\n", i);
+		if(binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos)){
+            if(toConvert[i] == 0){
+                treePos = binaryTree_leftChild(huffmanTree, treePos);
+				i++;
+            }
+            if(toConvert[i] == 1){
+                treePos = binaryTree_rightChild(huffmanTree, treePos);
+				i++;
+            }
+        } else {
+            tmp2 = (freqChar *) binaryTree_inspectLabel(huffmanTree, treePos);
+            printf("%c\n", tmp2->character);
+            fprintf(output, "%c", tmp2->character);
+            treePos = binaryTree_root(huffmanTree);
+            if ((int) tmp2 == 4){ //WHAT DOES THIS DO?
+                return;
+			}
+			i++;
+        }
+	}*/
     
 	printf("File decoded successfully!\n");
 
