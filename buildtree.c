@@ -50,6 +50,15 @@ int main(int argc, char **argv){
 	char encodeStr[8];
 	char decodeStr[8];
 
+	strcpy(encodeStr, "-encode");
+	strcpy(decodeStr, "-decode");
+	if (!strcmp(argv[1], encodeStr)){
+		selector = 1;
+	} else if(!strcmp(argv[1], decodeStr)){
+		selector = 2;
+	}
+
+
 
 	/*
 	 * Check and open files
@@ -59,7 +68,16 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
 	}
 
-	FILE* infilep = fopen(argv[3], "rt");
+
+	FILE *infilep;
+
+	if (selector == 1) {
+		infilep = fopen(argv[3], "rt");
+	} else {
+		infilep = fopen(argv[3], "rb");
+	}
+
+	//FILE* infilep = fopen(argv[3], "rt");
 	if(infilep == NULL){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
 	}
@@ -70,13 +88,7 @@ int main(int argc, char **argv){
 	}
 
 
-	strcpy(encodeStr, "-encode");
-	strcpy(decodeStr, "-decode");
-	if (!strcmp(argv[1], encodeStr)){
-		selector = 1;
-	} else if(!strcmp(argv[1], decodeStr)){
-		selector = 2;
-	}
+
 
 
 	switch(selector) {
@@ -93,12 +105,12 @@ int main(int argc, char **argv){
 
 
 			getFrequency(frequency, freqFilep);
-			binary_tree *tree4 = buildHuffmanTree(frequency, compareTrees);
+			binary_tree *treeEncode = buildHuffmanTree(frequency, compareTrees);
 
 			bitset *navPath = bitset_empty();
 			bitset *pathArray[256];
 
-			traverseTree(binaryTree_root(tree4), tree4, navPath, pathArray );
+			traverseTree(binaryTree_root(treeEncode), treeEncode, navPath, pathArray );
 
 			/*
 			// test whether we can access the bitset stored in a bitset array
@@ -109,19 +121,22 @@ int main(int argc, char **argv){
 
 			encodeFile(infilep, outfilep, pathArray );
 
-			/*
-             * cleaning up
-             */
-
-			fclose(freqFilep);
-			fclose(infilep);
-			fclose(outfilep);
-
 			break;
 
 
 
 		case 2:
+
+			printf("let's decode the shit\n");
+
+			/*
+ 			 * calculate frequency table
+ 			 * build huffman tree
+ 			 */
+
+			getFrequency(frequency, freqFilep);
+			binary_tree *treeDecode = buildHuffmanTree(frequency, compareTrees);
+			decodeFile(infilep, outfilep, treeDecode);
 
 
 			break;
@@ -132,23 +147,12 @@ int main(int argc, char **argv){
 	}
 
 
-    /*
-     * validating input args
-     *//*
-
-	FILE* infilep = fopen(argv[2], "rt");
-	if(infilep == NULL){
-		fprintf(stderr, "Couldn't open input file %s\n", argv[1]);
-	}
-	
-	FILE* outfilep = fopen(argv[4], "w");
-	if(outfilep == NULL){
-		fprintf(stderr, "Couldn't open output file %s\n", argv[2]);
-	}*/
-
-
-
-
+	/*
+     * cleaning up
+     */
+	fclose(freqFilep);
+	fclose(infilep);
+	fclose(outfilep);
 
 	return 0;
 }
@@ -166,8 +170,11 @@ void getFrequency(int* frequency, FILE* file){
 	int finished=0;
 	int ch;
 	for (ch = 0; ch < 256; ch++){
-		frequency[ch] = 0;
+		frequency[ch] = 1;
 	}
+
+	// one count for the EOT char
+	frequency[4]++;
 	
 	while (finished!=1){
 		ch = fgetc(file);
@@ -182,13 +189,18 @@ void getFrequency(int* frequency, FILE* file){
 		}
 	}
 
+
+	/*
 	// modify freq dist
 	for(int iii = 0; iii < 256; iii++){
 		frequency[iii] *= 1000;
 		if(frequency[iii]==0){
 			frequency[iii]=1;
+
 		}
+		printf("%c : %d\n", (unsigned char)iii, frequency[iii]);
 	}
+	*/
 
 
 }
@@ -366,7 +378,15 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 
 	while((tmp = fgetc(encodeThis))){
 		if ( feof(encodeThis) ) {
+
+			//adding the EOT char in the end of encoded bit sequence
+			lengthCharBitset = pathArray[4]->length;
+			for(int iii = 0; iii < lengthCharBitset; iii++){
+				lengthCharCompound = compoundBitset->length;
+				bitset_setBitValue(compoundBitset, lengthCharCompound, bitset_memberOf(pathArray[4], iii));
+			}
 			break;
+
 		} else {
 			lengthCharBitset = pathArray[(int)tmp]->length;
 			for(int iii = 0; iii < lengthCharBitset; iii++) {
@@ -381,6 +401,8 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 		}
 	}
 
+
+
     fputs(toByteArray(compoundBitset), output);
 
     printf("length of bitset %d\n", compoundBitset->length);
@@ -389,39 +411,47 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 
 
 void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
-	int finished = 0;
-	int failed = 0;
-	char tmp;
-	freqChar* tmp2;
+	//int finished = 0;
+	//int failed = 0;
+	int size;
+	//freqChar* tmp2;
 	binaryTree_pos treePos = binaryTree_root(huffmanTree);
-	while (finished!=1){
-		while((binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos))&&finished!=1){
-			tmp = fgetc(decodeThis);
-			if (tmp == EOF){
-				finished = 1;
-			}
-			else if (tmp == '0'){
+	fseek(decodeThis, 0, SEEK_END);
+	size = ftell(decodeThis);
+	fseek(decodeThis, 0, SEEK_SET);
+	int tmp[size];
+
+
+	for(int iii = 0; iii > size; iii++) {
+		tmp[iii] = fgetc(decodeThis);
+	}
+
+		//while((binaryTree_hasLeftChild(huffmanTree, treePos)||binaryTree_hasRightChild(huffmanTree, treePos))){
+			/*
+			for (int iii = 0; iii < 8; ++iii){
+				bitout[iii] = (tmp >> iii) & 1;
+			}*/
+
+			/*if (*tmp == 0){
 				treePos = binaryTree_leftChild(huffmanTree, treePos);
 			}
-			else if (tmp == '1'){
+			else if (*tmp == 1){
 				treePos = binaryTree_rightChild(huffmanTree, treePos);
 			}
-			else{
-				finished = 1;
-				failed = 1;
-				fprintf(stderr, "ERROR: Unknown binary sequence, decoding failed.\n");
-			}
+
 		}
-		if(finished != 1){
-			tmp2 = (freqChar*)binaryTree_inspectLabel(huffmanTree, treePos);
-			printf("%c\n", tmp2->character);
-			fprintf(output, "%c", tmp2->character);
-			treePos = binaryTree_root(huffmanTree);
-		}
-	}
-	if(failed == 0){
-		printf("File decoded successfully!\n");
-	}
+
+		tmp2 = (freqChar*)binaryTree_inspectLabel(huffmanTree, treePos);
+		printf("%c\n", tmp2->character);
+		fprintf(output, "%c", tmp2->character);
+		treePos = binaryTree_root(huffmanTree);
+		if((int)tmp2 == 4)
+			finished=1;
+		*/
+
+
+	printf("File decoded successfully!\n");
+
 }
 
 int wrongArgs(void){
