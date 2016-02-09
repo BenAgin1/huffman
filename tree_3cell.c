@@ -36,7 +36,7 @@ Kommentarer: Bör anropas direkt efter att trädet skapats om funktionaliteten
              men det är då upp till användaren av datatypen att avallokera allt
              minne för datat som lagras i trädet.
 */
-void binaryTree__setMemHandler(binary_tree *t, memFreeFunc *f) {
+void binaryTree_setMemHandler(binary_tree *t, memFreeFunc *f) {
     t->freeFunc=f;
 }
 
