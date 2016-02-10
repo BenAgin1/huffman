@@ -111,6 +111,16 @@ int main(int argc, char **argv){
 				bitset_free(pathArray_encode[i]);
 			}
 			binaryTree_free(treeEncode);
+
+			// screen output
+			int readBytes = ftell(infilep) + 1;
+			int writeBytes = ftell(outfilep) + 1;
+			printf("%d bytes read from %s.\n", readBytes, argv[3]);
+			printf("%d bytes used in encoded form.", writeBytes);
+
+
+
+
 			break;
 			
 		case 2:
@@ -119,18 +129,10 @@ int main(int argc, char **argv){
 			
 			/*Build huffman tree.*/
 			binary_tree *treeDecode = buildHuffmanTree(frequency, compareTrees);
-			
-			/*Traverse the tree to build a code table.*/
-			bitset *pathArray_decode[256];
-			traverseTree(binaryTree_root(treeDecode), treeDecode, navPath, freeIndex, pathArray_decode);
-			
+
 			/*Decode the input file.*/
 			decodeFile(infilep, outfilep, treeDecode);
-			
-			/*Free allocated memory.*/
-			for (int i = 0; i<256; i++){
-				bitset_free(pathArray_decode[i]);
-			}
+
 			binaryTree_free(treeDecode);
 			break;
 			
