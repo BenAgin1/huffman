@@ -76,14 +76,14 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
 	}
 
-	FILE *outfilep;
+	FILE *outfilep = fopen(argv[4], "w");
+	/*
 	if(selector == 1) {
 		outfilep = fopen(argv[4], "w");
 	} else {
 		outfilep = fopen(argv[4], "w");
-	}
+	}*/
 
-	//FILE* outfilep = fopen(argv[4], "wb");
 	if(outfilep == NULL){
 		fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
 	}
@@ -108,24 +108,16 @@ int main(int argc, char **argv){
 			bitset *pathArray[256];
 
 			traverseTree(binaryTree_root(treeEncode), treeEncode, navPath, pathArray );
-
-			/*
-			// test whether we can access the bitset stored in a bitset array
-			for (int iii = 0; iii < 256; iii++) {
-				printf("%d\n", pathArray[iii]->length);
-			}
-			*/
-
 			encodeFile(infilep, outfilep, pathArray );
 
             /*
              * cleanup
              */
+
             bitset_free(navPath);
             for (int i = 0; i<256; i++){
                 bitset_free(pathArray[i]);
             }
-            //binaryTree_free(treeEncode);
 
 
 			break;
@@ -144,20 +136,19 @@ int main(int argc, char **argv){
 			bitset *navPath_decode = bitset_empty();
 			bitset *pathArray_decode[256];
 
-			traverseTree(binaryTree_root(treeDecode), treeDecode, navPath_decode, pathArray_decode );
+			//traverseTree(binaryTree_root(treeDecode), treeDecode, navPath_decode, pathArray_decode );
 
 			decodeFile(infilep, outfilep, treeDecode);
 
             /*
              * cleanup
              */
+
+            /*
             bitset_free(navPath_decode);
             for (int i = 0; i<256; i++){
                 bitset_free(pathArray_decode[i]);
-            }
-            //binaryTree_free(treeDecode);
-
-
+            }*/
 
 			break;
 		default:
@@ -361,7 +352,7 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
  *              tree    - pointer to binary tree to traverse
  *
  * This function expects the leafs of the tree to have labels
- * of type freqChar. It will print out both charachter and value
+ * of type freqChar. It will print out both character and value
  * of each leaf. Traversal is pre-order.
  */
 void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, 
