@@ -23,7 +23,6 @@
  * and Lorenz Gerber <dv15lgr@cs.umu.se>
  * February 18, 2016.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,7 +31,11 @@
 #include "bitset.h"
 
 
-/* Node of the huffman tree */
+/*
+ * Struct 'freqChar'
+ * Node for 'tree_3cell' datatype that allows
+ * to store both a frequency and a character value
+ */
 typedef struct {
   int value;
   unsigned char character;
@@ -56,8 +59,7 @@ int main(int argc, char **argv){
     /*
      * Variables
      */
-
-    int frequency[256];
+    int frequency[256] = { 0 };
 	int navPath[MAXBITSIZE] = {-1};
 	int freeIndex = 0;
 
@@ -65,7 +67,6 @@ int main(int argc, char **argv){
 	/*
 	 * Check number of command line arguments
 	 */
-
     if(argc <= 4){
 		return wrongArgs();
 	}
@@ -74,8 +75,7 @@ int main(int argc, char **argv){
 	/*
 	 * Check and switch for encode / decoden argument
 	 */
-
-    int selector;
+    int selector = 0;
 	char encodeStr[8];
 	char decodeStr[8];
 
@@ -92,7 +92,6 @@ int main(int argc, char **argv){
 	/*
 	 * Check and open files
 	 */
-
     FILE* freqFilep = fopen(argv[2], "rt");
 	if(freqFilep == NULL){
 		fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
@@ -109,12 +108,7 @@ int main(int argc, char **argv){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
 	}
 
-	FILE *outfilep;
-	if(selector == 1) {
-		outfilep = fopen(argv[4], "w");
-	} else {
-		outfilep = fopen(argv[4], "w");
-	}
+	FILE *outfilep = fopen(argv[4], "w");
 
 	if(outfilep == NULL){
 		fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
@@ -125,7 +119,6 @@ int main(int argc, char **argv){
      * Switch for two main modes:
      * encode / decode
      */
-
     switch(selector) {
 		case 1:
 			// Make frequency table
@@ -149,21 +142,21 @@ int main(int argc, char **argv){
 			binaryTree_free(treeEncode);
 
 			// Screen output
-			int readBytes = ftell(infilep) + 1;
-			int writeBytes = ftell(outfilep) + 1;
-			printf("%d bytes read from %s.\n", readBytes, argv[3]);
-			printf("%d bytes used in encoded form.", writeBytes);
+            long readBytes = ftell(infilep) + 1;
+            long writeBytes = ftell(outfilep) + 1;
+			printf("%ld bytes read from %s.\n", readBytes, argv[3]);
+			printf("%ld bytes used in encoded form.", writeBytes);
 			break;
 			
 		case 2:
 
-			//Make frequency table
+			// Make frequency table
 			getFrequency(frequency, freqFilep);
 			
-			//Build huffman tree
+			// Build huffman tree
 			binary_tree *treeDecode = buildHuffmanTree(frequency, compareTrees);
 
-			//Decode the input file
+			// Decode the input file
 			decodeFile(infilep, outfilep, treeDecode);
 
 			binaryTree_free(treeDecode);
@@ -193,15 +186,9 @@ int main(int argc, char **argv){
  *              file      - pointer of type FILE. The input file has to be
  *                          a standard text file.
  */
-
 void getFrequency(int* frequency, FILE* file){
 	int finished=0;
 	int ch;
-	
-	// Initiate every character
-	for (ch = 0; ch < 256; ch++){
-		frequency[ch] = 1;
-	}
 	
 	// Increase freqeuncy of EOT character by 1
 	frequency[4]++;
@@ -212,21 +199,20 @@ void getFrequency(int* frequency, FILE* file){
         // Stop reading at EOF
 		if (ch == EOF){
 			finished=1;
-		}
+		} else {
 
-            // Assuming ASCII, increases the frequency of the character read
-		else{
+			// increase the frequency of the character read
 			frequency[ch]++;
 		}
 	}
 	
 	/*
-	 * The following lines solve the problem when a large number of characters
-	 * appear zero times in the frequency table. This can lead to unbalanced
-	 * and unnecessary deep trees. We first multiply the frequency by 1000 to
-	 * introduce a large value gap between characters with zero frequency and
-	 * such with frequency > 0. Then we set all characters with frequency 0
-	 * to frequency 1. This will result in two almost independent sub-trees.
+	 * The following lines solve the problem high high numbers of zero frequency
+	 * characters. They lead to unbalanced and unnecessary deep trees.
+	 * We first multiply the frequency by 1000 to introduce a large value gap
+	 * between characters with zero frequency and such with frequency > 0.
+	 * Then we set all characters with frequency 0 to frequency 1. This will
+	 * result in two almost independent sub-trees.
 	 */
 	for(int iii = 0; iii < 256; iii++){
 		frequency[iii] *= 1000;
@@ -284,19 +270,22 @@ int compareTrees(VALUE tree1, VALUE tree2){
  */
 binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
 	pqueue *treebuildingQueue = pqueue_empty (compare);
-	int chartmp;
+    int allChars;
 	binary_tree *tree1;
 	binary_tree *tree2;
 	binary_tree *newTree; 
 	
-	// Create 1 tree for each character and put all of them in a priority queue
-	for (chartmp = 0; chartmp < 256; chartmp++){
-		freqChar *tmp = malloc(sizeof(freqChar));
-		tmp->character = chartmp;
-		tmp->value = frequency[chartmp];
+	/*
+	 * Create one tree for each character and put all of them in a
+	 * priority queue.
+	 */
+	for (allChars = 0; allChars < 256; allChars++){
+		freqChar *nodeLabel = malloc(sizeof(freqChar));
+		nodeLabel->character = allChars;
+		nodeLabel->value = frequency[allChars];
 		newTree = binaryTree_create(); 
 		binaryTree_setMemHandler(newTree, free);
-		binaryTree_setLabel(newTree, tmp, binaryTree_root(newTree));
+		binaryTree_setLabel(newTree, nodeLabel, binaryTree_root(newTree));
 		pqueue_insert(treebuildingQueue, newTree);
 	}
 	
@@ -304,12 +293,11 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
     /*
 	 * While priority queue isn't empty take out the two front values and
 	 * connect these two trees with a new node (tree), put this new combined
-	 * tree in the queue
+	 * tree in the queue.
 	 */
-
     while(!pqueue_isEmpty(treebuildingQueue)){
 
-        // Create new tree with 1 node
+        // Create new tree with one node
 		newTree = binaryTree_create(); 
 		binaryTree_setMemHandler(newTree, free);
 
@@ -318,9 +306,8 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
 		 * Take out the first tree from the queue and save the values on its
 		 * label.
 		 */
-
 		tree1 = pqueue_inspect_first(treebuildingQueue);
-		freqChar *freqChartmp1 =
+		freqChar *labelTree1 =
                 binaryTree_inspectLabel(tree1, binaryTree_root(tree1));
 		pqueue_delete_first(treebuildingQueue);
 		
@@ -335,30 +322,33 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
 			
 			/*
 			 * Take out the second tree from the queue and save the values on
-			 * its 
-			 label.*/
+			 * its label.
+			 */
 			tree2 = pqueue_inspect_first(treebuildingQueue);
-			freqChar *freqChartmp3 =
+			freqChar *labelTree2 =
                     binaryTree_inspectLabel(tree2, binaryTree_root(tree2));
 			pqueue_delete_first(treebuildingQueue);
 			
-			/*Initiate and give values to the new node label.*/
-			freqChar *freqChartmp2 = malloc(sizeof(freqChar));
-			freqChartmp2->value = freqChartmp1->value + freqChartmp3->value;
-			freqChartmp2->character = -1;
+			// Initiate and give values to the new node label
+			freqChar *labelCombinedTree = malloc(sizeof(freqChar));
+			labelCombinedTree->value = labelTree1->value + labelTree2->value;
+			labelCombinedTree->character = -1;
 			
-			/*Set label on the new tree and insert a left and right child.*/
-			binaryTree_setLabel(newTree, freqChartmp2, 
+			// Set label on the new tree and insert a left and right child
+			binaryTree_setLabel(newTree, labelCombinedTree,
 				binaryTree_root(newTree));
 			
-			/*Set the two trees from the queue as right/left child on the 
-			 new node.*/
+			/*
+			 * Set the two trees from the queue
+			 * as right/left child on the
+			 * new node.
+			 */
 			newTree->root->rightChild = tree1->root;
 			newTree->root->leftChild = tree2->root;
 			tree1->root->parent = newTree->root;
 			tree2->root->parent = newTree->root;
 			
-			/*Insert the new tree in the queue.*/
+			// Insert the new tree in the queue
 			pqueue_insert(treebuildingQueue, newTree);
 			free(tree1);
 			free(tree2);
@@ -380,31 +370,33 @@ binary_tree *buildHuffmanTree (int *frequency, int (*compare)(VALUE, VALUE)){
  */
 void traverseTree(binaryTree_pos pos, binary_tree *huffmanTree, int navPath[],
                   int freeIndex, bitset *pathArray[]){
-	/*If we move left in the tree add '0' to the bit sequence.*/
+	// If we move left in the tree add '0' to the bit sequence
 	if(binaryTree_hasLeftChild(huffmanTree, pos)){
 		navPath[freeIndex] = 0;
 		traverseTree(binaryTree_leftChild(huffmanTree, pos), huffmanTree, 
 			navPath, freeIndex+1, pathArray);
 	}
 	
-	/*If we move right in the tree add '1' to the bit sequence.*/
+	// If we move right in the tree add '1' to the bit sequence
 	if(binaryTree_hasRightChild(huffmanTree, pos)){
 		navPath[freeIndex] = 1;
 		traverseTree(binaryTree_rightChild(huffmanTree, pos), huffmanTree, 
 			navPath, freeIndex+1, pathArray);
 	}
 	
-	/*If current position does not have a left or right child save the bit 
-	  sequence in a bitset and store the adress to this bitset.*/
+	/*
+	 * If current position does not have a left or right child save the bit
+	 * sequence in a bitset and store the adress to this bitset.
+	 */
 	if(!binaryTree_hasLeftChild(huffmanTree, pos) && 
 		!binaryTree_hasRightChild(huffmanTree, pos)){
-		freqChar* tmp = binaryTree_inspectLabel(huffmanTree, pos);
+		freqChar* labelLeaf = binaryTree_inspectLabel(huffmanTree, pos);
 		bitset* result = bitset_empty();
 		int i;
 		for(i=0; i<freeIndex; i++){
 			bitset_setBitValue(result, i, navPath[i]);
 		}
-		pathArray[(int)tmp->character] = result;
+		pathArray[(int)labelLeaf->character] = result;
 	}
 }
 
@@ -426,7 +418,7 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 	
 	while((tmp = fgetc(encodeThis))){
 		if (feof(encodeThis)) {
-			/*Adds the EOT character at the end of the encoded bit sequence.*/
+			// Adds the EOT character at the end of the encoded bit sequence
 			lengthCharBitset = pathArray[4]->length;
 			for(int iii = 0; iii < lengthCharBitset; iii++){
 				lengthCharCompound = compoundBitset->length;
@@ -435,7 +427,7 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 			}
 			break;
 		} else {
-			/*Take all bit sequences and add them all to one bitset.*/
+			// Take all bit sequences and add them all to one bitset
 			lengthCharBitset = pathArray[(int)tmp]->length;
 			for(int iii = 0; iii < lengthCharBitset; iii++) {
 				if (compoundBitset->length == -1){
@@ -449,15 +441,14 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 		}
 	}
 	
-	/*Write the whole bitset to output file.*/
+	// Write the whole bitset to output file
 	writeToFile = toByteArray(compoundBitset);
 	capacityCharCompound = compoundBitset->capacity;
-	lengthCharCompound = compoundBitset->length;
 	for(int iii = 0; iii < capacityCharCompound/8; iii++){
 		fputc((unsigned char)writeToFile[iii], output);
 	}
 	
-	/*Free allocated memory.*/
+	// Free allocated memory
 	free(writeToFile);
 	bitset_free(compoundBitset);
 }
@@ -474,56 +465,57 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
  */
 void decodeFile(FILE* decodeThis, FILE* output, binary_tree* huffmanTree){
 	int size;
-	int i = 0;
-	freqChar* tmp2;
+	int decodingPos = 0;
+	freqChar* currentLabel;
 	binaryTree_pos treePos = binaryTree_root(huffmanTree);
 	
-	/*Get the length of the input file.*/
+	// Get length of input file
 	fseek(decodeThis, 0, SEEK_END);
 	size = ftell(decodeThis);
 	fseek(decodeThis, 0, SEEK_SET);
-	int tmp[size];
+	int inputTextArray[size];
 	
-	/*Read all characters.*/
-	for (int iii = 0; iii < size; iii++) {
-		tmp[iii] = fgetc(decodeThis);
+	// Read all characters
+	for (int currentRead = 0; currentRead < size; currentRead++) {
+		inputTextArray[currentRead] = fgetc(decodeThis);
 	}
+
+    // Characters have to be translated into bitsequence
+	bool *bitSeqToConvert;
+	bitSeqToConvert = (bool*) calloc(size * 8,sizeof(bool));
 	
-	bool *toConvert;
-	toConvert = (bool*) calloc(size*8,sizeof(bool));
-	
-	/*Convert every read character to a binary sequence.*/
-	for (int iii = 0; iii < size; iii++){
-		for (int jjj = 0; jjj < 8; jjj++) {
-			toConvert[iii*8+jjj] = (tmp[iii] >> jjj) & 1;
+	// Convert every read character to a binary sequence
+	for (int currentTranslateChar = 0; currentTranslateChar < size;
+         currentTranslateChar++){
+		for (int bytePosition = 0; bytePosition < 8; bytePosition++) {
+			bitSeqToConvert[currentTranslateChar * 8 + bytePosition] =
+                    (inputTextArray[currentTranslateChar] >> bytePosition) & 1;
 		}
 	}
 	
-	/*According to binary sequence move through tree until leaf is reached at
-	  leaf print associated character to output file.*/
-	while(i<size*8){
+	/*
+	 * According to binary sequence move through tree until leaf is reached at
+	 * leaf print associated character to output file.
+	 */
+	while(decodingPos < size * 8){
 		if(binaryTree_hasLeftChild(huffmanTree, treePos) ||
                 binaryTree_hasRightChild(huffmanTree, treePos)){
-			if(toConvert[i] == 0){
+			if(bitSeqToConvert[decodingPos] == 0){
 				treePos = binaryTree_leftChild(huffmanTree, treePos);
-				i++;
+				decodingPos++;
 			}
-			else if(toConvert[i] == 1){
+			else if(bitSeqToConvert[decodingPos] == 1){
 				treePos = binaryTree_rightChild(huffmanTree, treePos);
-				i++;
+				decodingPos++;
 			}
 		}
 		else{
-			tmp2 = (freqChar *) binaryTree_inspectLabel(huffmanTree, treePos);
-			fprintf(output, "%c", tmp2->character);
+			currentLabel = (freqChar *) binaryTree_inspectLabel(huffmanTree, treePos);
+			fprintf(output, "%c", currentLabel->character);
 			treePos = binaryTree_root(huffmanTree);
-			if ((int) tmp2 == 4){
-				free(toConvert);
-				return;
-			}
 		}
 	}
-	free(toConvert);
+	free(bitSeqToConvert);
 	printf("File decoded successfully!\n");
 }
 
