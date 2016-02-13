@@ -33,7 +33,8 @@
 
 # IDE
 .idea/*
-
+huffman.mk/*
+huffman.project/*
 
 # misc
 main3.c
