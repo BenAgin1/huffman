@@ -85,7 +85,7 @@ int main(int argc, char **argv){
 		selector = 1;
 	} else if(!strcmp(argv[1], decodeStr)){
 		selector = 2;
-	}
+	} else return wrongArgs();
 
 
 
@@ -95,6 +95,7 @@ int main(int argc, char **argv){
     FILE* freqFilep = fopen(argv[2], "rt");
 	if(freqFilep == NULL){
 		fprintf(stderr, "Couldn't open frequency file %s\n", argv[2]);
+		return wrongArgs();
 	}
 
 	FILE *infilep;
@@ -106,12 +107,14 @@ int main(int argc, char **argv){
 
 	if(infilep == NULL){
 		fprintf(stderr, "Couldn't open input file %s\n", argv[3]);
+		return wrongArgs();
 	}
 
 	FILE *outfilep = fopen(argv[4], "w");
 
 	if(outfilep == NULL){
 		fprintf(stderr, "Couldn't open output file %s\n", argv[4]);
+		return wrongArgs();
 	}
 
 
