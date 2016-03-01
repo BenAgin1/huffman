@@ -417,26 +417,25 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 	int lengthCharCompound;
 	bitset *compoundBitset = bitset_empty();
 	char* writeToFile;
-	int capacityCharCompound;
 	
 	while((tmp = fgetc(encodeThis))){
 		if (feof(encodeThis)) {
 			// Adds the EOT character at the end of the encoded bit sequence
-			lengthCharBitset = pathArray[4]->length;
+			lengthCharBitset = bitset_size(pathArray[4]);
 			for(int iii = 0; iii < lengthCharBitset; iii++){
-				lengthCharCompound = compoundBitset->length;
+				lengthCharCompound = bitset_size(compoundBitset);
 				bitset_setBitValue(compoundBitset, lengthCharCompound,
                                    bitset_memberOf(pathArray[4], iii));
 			}
 			break;
 		} else {
 			// Take all bit sequences and add them all to one bitset
-			lengthCharBitset = pathArray[(int)tmp]->length;
+			lengthCharBitset = bitset_size(pathArray[(int)tmp]);
 			for(int iii = 0; iii < lengthCharBitset; iii++) {
-				if (compoundBitset->length == -1){
+				if (bitset_size(compoundBitset) == -1){
 					lengthCharCompound = 0;
 				} else {
-					lengthCharCompound = compoundBitset->length;
+					lengthCharCompound = bitset_size(compoundBitset);
 				}
 				bitset_setBitValue(compoundBitset,lengthCharCompound, 
 					bitset_memberOf(pathArray[(int)tmp], iii));
@@ -446,8 +445,7 @@ void encodeFile(FILE *encodeThis, FILE *output, bitset *pathArray[]){
 	
 	// Write the whole bitset to output file
 	writeToFile = toByteArray(compoundBitset);
-	capacityCharCompound = compoundBitset->capacity;
-	for(int iii = 0; iii < capacityCharCompound/8; iii++){
+	for(int iii = 0; iii < bitset_size(compoundBitset)/8; iii++){
 		fputc((unsigned char)writeToFile[iii], output);
 	}
 	
