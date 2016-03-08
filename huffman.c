@@ -145,8 +145,8 @@ int main(int argc, char **argv){
 			binaryTree_free(treeEncode);
 
 			// Screen output
-            long readBytes = ftell(infilep) + 1;
-            long writeBytes = ftell(outfilep) + 1;
+            long readBytes = ftell(infilep);
+            long writeBytes = ftell(outfilep);
 			printf("%ld bytes read from %s.\n", readBytes, argv[3]);
 			printf("%ld bytes used in encoded form.", writeBytes);
 			break;
