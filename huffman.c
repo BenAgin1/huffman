@@ -148,7 +148,7 @@ int main(int argc, char **argv){
             long readBytes = ftell(infilep);
             long writeBytes = ftell(outfilep);
 			printf("%ld bytes read from %s.\n", readBytes, argv[3]);
-			printf("%ld bytes used in encoded form.", writeBytes);
+			printf("%ld bytes used in encoded form.\n", writeBytes);
 			break;
 			
 		case 2:
